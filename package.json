@@ -1,0 +1,25 @@
+{
+    "name": "tiny-canvas",
+    "version": "0.0.1",
+    "author": {
+        "name": "Felipe Alfonso",
+        "github-handle": "bitnenfer"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/bitnenfer/tiny-canvas"
+    },
+    "devDependencies": {
+        "grunt": "~0.4.1",
+        "grunt-contrib-concat": "~0.3.0",
+        "grunt-contrib-clean": "~0.4.1",
+        "grunt-contrib-compress": "~0.10.0",
+        "grunt-closure-compiler": "~0.0.21",
+        "matchdep": "~0.1.2"
+    },
+    "engine": "node 0.8.12",
+    "scripts": {
+        "install": "bower install;grunt",
+        "release": "grunt release"
+    }
+}
