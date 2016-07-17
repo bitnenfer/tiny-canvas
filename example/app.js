@@ -1,4 +1,3 @@
-(function () {
     var canvas = TcCnv(document.getElementById('canvas')),
         bunnyTexture = null,
         fpsMeter = new FPSMeter({
@@ -138,4 +137,3 @@
         create();
     };
     bunnyImage.src = 'bunnys.png';
-}());

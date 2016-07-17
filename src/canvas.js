@@ -2,8 +2,6 @@ function CompileShader(gl, source, type) {
     var shader = gl.createShader(type);
     gl.shaderSource(shader, source);
     gl.compileShader(shader);
-    // No space for error checking.
-    // Make sure shaders are correct.
     return shader;
 }
 function CreateShaderProgram(gl, vsSource, fsSource) {
@@ -13,17 +11,6 @@ function CreateShaderProgram(gl, vsSource, fsSource) {
     gl.attachShader(program, vShader);
     gl.attachShader(program, fShader);
     gl.linkProgram(program);
-    // No space for error checking.
-    // Make sure shaders are correct.
-    program.use = function () {
-        gl.useProgram(program)
-    };
-    program.attr = function (name) {
-        return gl.getAttribLocation(program, name)
-    };
-    program.unif = function (name) {
-        return gl.getUniformLocation(program, name)
-    };
     return program;
 }
 
@@ -31,16 +18,6 @@ function CreateBuffer(gl, bufferType, size, usage) {
     var buffer = gl.createBuffer();
     gl.bindBuffer(bufferType, buffer);
     gl.bufferData(bufferType, size, usage);
-    buffer.bind = function () {
-        gl.bindBuffer(bufferType, buffer)
-    };
-    buffer.typedef = function (location, componentSize, type, normalize, stride, offset) {
-        gl.enableVertexAttribArray(location);
-        gl.vertexAttribPointer(location, componentSize, type, normalize, stride, offset);
-    };
-    buffer.upload = function (data) {
-        gl.bufferSubData(bufferType, 0, data);
-    };
     return buffer;
 }
 
@@ -53,12 +30,6 @@ function CreateTexture(gl, image, width, height) {
     gl.texParameteri(3553, 10241, 9728);
     gl.texImage2D(3553, 0, 6408, 6408, 5121, image);
     gl.bindTexture(3553, null);
-    texture.bind = function (location, index) {
-        index = index || 0;
-        gl.uniform1i(location || 0, index);
-        gl.activeTexture(gl.TEXTURE0 + index);
-        gl.bindTexture(gl.TEXTURE_2D, texture);
-    };
     texture.width = width;
     texture.height = height;
     return texture;
@@ -123,19 +94,12 @@ function GetTinyCanvas(canvas) {
         sin = Math.sin,
         currentTexture = null,
         renderer = null,
-        sampler2DLocation = shader.unif('f'),
-        checkFlushState = function (texture) {
-            if (texture != currentTexture ||
-                count > MAX_BATCH)
-                renderer.flush(),
-                currentTexture = texture,
-                currentTexture.bind(sampler2DLocation, 0);
-        };
+        locA, locB, locC;
 
     gl.blendFunc(770, 771);
     gl.enable(3042);
-    shader.use();
-    IBO.bind();
+    gl.useProgram(shader);
+    gl.bindBuffer(34963, IBO);
     for (var indexA = indexB = 0; indexA < MAX_BATCH * 6; indexA += 6, indexB += 4)
         vIndexData[indexA + 0] = indexB,
         vIndexData[indexA + 1] = indexB + 1,
@@ -144,19 +108,26 @@ function GetTinyCanvas(canvas) {
         vIndexData[indexA + 4] = indexB + 3,
         vIndexData[indexA + 5] = indexB + 1;
 
-    IBO.upload(vIndexData);
-    VBO.bind();
-    VBO.typedef(shader.attr('a'), 2, 5126, 0, VERTEX_SIZE, 0);
-    VBO.typedef(shader.attr('b'), 2, 5126, 0, VERTEX_SIZE, 8);
-    VBO.typedef(shader.attr('c'), 4, 5121, 1, VERTEX_SIZE, 16);
-    gl.uniformMatrix4fv(shader.unif('m'), 0,
+    gl.bufferSubData(34963, 0, vIndexData);
+    gl.bindBuffer(34962, VBO);
+    locA = gl.getAttribLocation(shader, 'a');
+    locB = gl.getAttribLocation(shader, 'b');
+    locC = gl.getAttribLocation(shader, 'c');
+
+    gl.enableVertexAttribArray(locA);
+    gl.vertexAttribPointer(locA, 2, 5126, 0, VERTEX_SIZE, 0);
+    gl.enableVertexAttribArray(locB);
+    gl.vertexAttribPointer(locB, 2, 5126, 0, VERTEX_SIZE, 8);
+    gl.enableVertexAttribArray(locC);
+    gl.vertexAttribPointer(locC, 4, 5121, 1, VERTEX_SIZE, 16);
+    gl.uniformMatrix4fv(gl.getUniformLocation(shader, 'm'), 0,
         new Float32Array([
             2 / width, 0, 0, 0,
             0, -2 / height, 0, 0,
             0, 0, 1, 1, -1, 1, 0, 0
         ])
     );
-    gl.activeTexture(gl.TEXTURE0);
+    gl.activeTexture(33984);
     renderer = {
         'g': gl,
         'c': canvas,
