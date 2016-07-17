@@ -1,11 +1,35 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Tiny-GL</title>
-    <script type="text/javascript" src="../build/tiny-gl.js"></script>
+    <title>tiny-canvas</title>
+    <script type="text/javascript" src="fpsmeter.js"></script>
+    <style type="text/css">
+        body {
+            font-family: Verdana, Arial;
+            font-size: 10px;
+        }
+        canvas{
+            border: 0;
+            padding: 0;
+            margin: auto;
+            display: block;
+            outline: none;
+              
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -khtml-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+           -webkit-tap-highlight-color: rgba(255, 255, 255, 0); /* mobile webkit */
+          
+        }
+    </style>
 </head>
 <body>
 <canvas id='canvas' width="512" height="512"></canvas>
+<dir id="bunny-count">0 BUNNIES</dir>
+<script type="text/javascript" src="../build/tc.js"></script>
 <script type="text/javascript" src='app.js'></script>
 </body>
 </html>

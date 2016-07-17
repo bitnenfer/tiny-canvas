@@ -9,7 +9,7 @@ module.exports = function (grunt) {
             dist: {
                 files: {
                     'build/tiny-canvas.js': [
-                        ['src/utils.js', 'src/renderer2D.js']
+                        ['src/canvas.js']
                     ]
                 }
             }
@@ -19,7 +19,7 @@ module.exports = function (grunt) {
                 'build/**/',
             ],
             afterRelease: [
-                'build/tgc.js.report.txt'
+                'build/tc.js.report.txt'
             ]
         },
         compress: {
@@ -28,7 +28,7 @@ module.exports = function (grunt) {
                     archive: 'build/<%= pkg.name %>.zip'
                 },
                 files: [{
-                    src: ['build/tgc.js']
+                    src: ['build/tc.js']
                 }]
             }
         },
@@ -36,9 +36,9 @@ module.exports = function (grunt) {
             frontend: {
                 closurePath: 'node_modules/grunt-closure-compiler',
                 js: 'build/tiny-canvas.js',
-                jsOutputFile: 'build/tgc.js',
+                jsOutputFile: 'build/tc.js',
                 options: {
-                    compilation_level: 'SIMPLE_OPTIMIZATIONS'
+                    compilation_level: 'ADVANCED_OPTIMIZATIONS'
                 }
             }
         }
