@@ -1,5 +1,5 @@
 /*
- * TinyCanvas module (https://github.com/bitnenfer/tiny-canvas)
+ * TinySprite module (https://github.com/bitnenfer/tiny-canvas)
  * Developed by Felipe Alfonso -> https://twitter.com/bitnenfer/
  * 
  *  ----------------------------------------------------------------------
@@ -21,7 +21,6 @@
  *  ----------------------------------------------------------------------
  * 
  */
-
 function CompileShader(gl, source, type) {
     var shader = gl.createShader(type);
     gl.shaderSource(shader, source);
@@ -64,48 +63,39 @@ window['TCPrg'] = CreateShaderProgram;
 window['TCBuf'] = CreateBuffer;
 window['TCTex'] = CreateTexture;
 
-function TinyCanvas(canvas) {
+function TinySprite(canvas) {
     var gl = canvas.getContext('webgl'),
-        VERTEX_SIZE = (4 * 2) + (4 * 2) + (4),
+        // float + (vec2 * 4) + (char * 4)
+        VERTEX_SIZE = 4 + ((4 * 2) * 4) + (4),
         MAX_BATCH = 10922, // floor((2 ^ 16) / 6)
-        MAX_STACK = 100,
-        MAT_SIZE = 6,
-        VERTICES_PER_QUAD = 6,
-        MAT_STACK_SIZE = MAX_STACK * MAT_SIZE,
         VERTEX_DATA_SIZE = VERTEX_SIZE * MAX_BATCH * 4,
+        VERTICES_PER_QUAD = 6, 
         INDEX_DATA_SIZE = MAX_BATCH * (2 * VERTICES_PER_QUAD),
         width = canvas.width,
         height = canvas.height,
         shader = CreateShaderProgram(
             gl, [
                 'precision lowp float;',
-                // IN Vertex Position and
-                // IN Texture Coordinates
-                'attribute vec2 a, b;',
-                // IN Vertex Color
-                'attribute vec4 c;',
-                // OUT Texture Coordinates
-                'varying vec2 d;',
-                // OUT Vertex Color
-                'varying vec4 e;',
-                // CONST View Matrix
-                'uniform mat4 m;',
-                'uniform vec2 r;',
-                'void main(){',
-                'gl_Position=m*vec4(a,1.0,1.0);',
-                'd=b;',
-                'e=c;',
+                'attribute float a;',
+                'attribute vec2 b,c,d,e;',
+                'attribute vec4 f;',
+                'varying vec2 g;',
+                'varying vec4 h;',
+                'uniform mat4 i;',
+                'void main() {',
+                'float q=cos(a);',
+                'float w=sin(a);',
+                'gl_Position=i*vec4(((vec2(d.x*q-d.y*w,d.x*w+d.y*q)*c)+b),1.0,1.0);',
+                'g=e;',
+                'h=f;',
                 '}'
             ].join('\n'), [
                 'precision lowp float;',
-                // OUT Texture Coordinates
-                'varying vec2 d;',
-                // OUT Vertex Color
-                'varying vec4 e;',
-                // CONST Single Sampler2D
-                'uniform sampler2D f;',
+                'varying vec2 g;',
+                'varying vec4 h;',
+                'uniform sampler2D j;',
                 'void main(){',
-                'gl_FragColor=texture2D(f,d)*e;',
+                'gl_FragColor=texture2D(j,g)*h;',
                 '}'
             ].join('\n')
         ),
@@ -116,20 +106,18 @@ function TinyCanvas(canvas) {
         IBO = CreateBuffer(gl, 34963, vIndexData.byteLength, 35044),
         VBO = CreateBuffer(gl, 34962, vertexData.byteLength, 35048),
         count = 0,
-        mat = new Float32Array([1, 0, 0, 1, 0, 0]),
-        stack = new Float32Array(100),
-        stackp = 0,
-        cos = Math.cos,
-        sin = Math.sin,
         currentTexture = null,
         renderer = null,
-        locA, locB, locC;
+        locRotation, locTranslation, locScale,
+        locPosition, locUV, locColor;
 
     gl.blendFunc(770, 771);
     gl.enable(3042);
     gl.useProgram(shader);
     gl.bindBuffer(34963, IBO);
-    for (var indexA = indexB = 0; indexA < MAX_BATCH * VERTICES_PER_QUAD; indexA += VERTICES_PER_QUAD, indexB += 4)
+    for (var indexA = indexB = 0; 
+        indexA < MAX_BATCH * VERTICES_PER_QUAD; 
+        indexA += VERTICES_PER_QUAD, indexB += 4)
         vIndexData[indexA + 0] = indexB,
         vIndexData[indexA + 1] = indexB + 1,
         vIndexData[indexA + 2] = indexB + 2,
@@ -139,20 +127,44 @@ function TinyCanvas(canvas) {
 
     gl.bufferSubData(34963, 0, vIndexData);
     gl.bindBuffer(34962, VBO);
-    locA = gl.getAttribLocation(shader, 'a');
-    locB = gl.getAttribLocation(shader, 'b');
-    locC = gl.getAttribLocation(shader, 'c');
-    gl.enableVertexAttribArray(locA);
-    gl.vertexAttribPointer(locA, 2, 5126, 0, VERTEX_SIZE, 0);
-    gl.enableVertexAttribArray(locB);
-    gl.vertexAttribPointer(locB, 2, 5126, 0, VERTEX_SIZE, 8);
-    gl.enableVertexAttribArray(locC);
-    gl.vertexAttribPointer(locC, 4, 5121, 1, VERTEX_SIZE, 16);
-    gl.uniformMatrix4fv(gl.getUniformLocation(shader, 'm'), 0,
+
+    locRotation = gl.getAttribLocation(shader, 'a');
+    locTranslation = gl.getAttribLocation(shader, 'b');
+    locScale = gl.getAttribLocation(shader, 'c');
+    locPosition = gl.getAttribLocation(shader, 'd');
+    locUV = gl.getAttribLocation(shader, 'e');
+    locColor = gl.getAttribLocation(shader, 'f');
+
+    // Rotation
+    gl.enableVertexAttribArray(locRotation);
+    gl.vertexAttribPointer(locRotation, 1, 5126, 0, VERTEX_SIZE, 0);
+
+    // Translation
+    gl.enableVertexAttribArray(locTranslation);
+    gl.vertexAttribPointer(locTranslation, 2, 5126, 0, VERTEX_SIZE, 4);
+
+    // Scale
+    gl.enableVertexAttribArray(locScale);
+    gl.vertexAttribPointer(locScale, 2, 5126, 0, VERTEX_SIZE, 12);
+
+    // Position
+    gl.enableVertexAttribArray(locPosition);
+    gl.vertexAttribPointer(locPosition, 2, 5126, 0, VERTEX_SIZE, 20);
+
+    // UV
+    gl.enableVertexAttribArray(locUV);
+    gl.vertexAttribPointer(locUV, 2, 5126, 0, VERTEX_SIZE, 28);
+
+    // Color
+    gl.enableVertexAttribArray(locColor);
+    gl.vertexAttribPointer(locColor, 4, 5121, 1, VERTEX_SIZE, 36);
+
+    gl.uniformMatrix4fv(gl.getUniformLocation(shader, 'i'), 0,
         new Float32Array([
             2 / width, 0, 0, 0,
             0, -2 / height, 0, 0,
-            0, 0, 1, 1, -1, 1, 0, 0
+            0, 0, 1, 1,
+            -1, 1, 0, 0
         ])
     );
     gl.activeTexture(33984);
@@ -166,48 +178,7 @@ function TinyCanvas(canvas) {
         'cls': function () {
             gl.clear(16384);
         },
-        'trans': function (x, y) {
-            mat[4] = mat[0] * x + mat[2] * y + mat[4];
-            mat[5] = mat[1] * x + mat[3] * y + mat[5];
-        },
-        'scale': function (x, y) {
-            mat[0] = mat[0] * x;
-            mat[1] = mat[1] * x;
-            mat[2] = mat[2] * y;
-            mat[3] = mat[3] * y;
-        },
-        'rot': function (r) {
-            var a = mat[0],
-                b = mat[1],
-                c = mat[2],
-                d = mat[3],
-                sr = sin(r),
-                cr = cos(r);
-
-            mat[0] = a * cr + c * sr;
-            mat[1] = b * cr + d * sr;
-            mat[2] = a * -sr + c * cr;
-            mat[3] = b * -sr + d * cr;
-        },
-        'push': function () {
-            stack[stackp + 0] = mat[0];
-            stack[stackp + 1] = mat[1];
-            stack[stackp + 2] = mat[2];
-            stack[stackp + 3] = mat[3];
-            stack[stackp + 4] = mat[4];
-            stack[stackp + 5] = mat[5];
-            stackp += 6;
-        },
-        'pop': function () {
-            stackp -= 6;
-            mat[0] = stack[stackp + 0];
-            mat[1] = stack[stackp + 1];
-            mat[2] = stack[stackp + 2];
-            mat[3] = stack[stackp + 3];
-            mat[4] = stack[stackp + 4];
-            mat[5] = stack[stackp + 5];
-        },
-        'img': function (texture, x, y, w, h, u0, v0, u1, v1) {
+        'img': function (texture, x, y, w, h, r, tx, ty, sx, sy, u0, v0, u1, v1) {
             var x0 = x,
                 y0 = y,
                 x1 = x + w,
@@ -216,12 +187,6 @@ function TinyCanvas(canvas) {
                 y2 = y + h,
                 x3 = x + w,
                 y3 = y,
-                a = mat[0],
-                b = mat[1],
-                c = mat[2],
-                d = mat[3],
-                e = mat[4],
-                f = mat[5],
                 offset = 0,
                 argb = renderer['col'];
 
@@ -230,39 +195,59 @@ function TinyCanvas(canvas) {
                 gl.bufferSubData(34962, 0, vertexData);
                 gl.drawElements(4, count * VERTICES_PER_QUAD, 5123, 0);
                 count = 0;
-                if (currentTexture != texture) {
+                if (texture != currentTexture) {
                     currentTexture = texture;
                     gl.bindTexture(3553, currentTexture);
                 }
             }
 
             offset = count * VERTEX_SIZE;
-            // Vertex Order
-            // Vertex Position | UV | ARGB
+            // Vertex Order: 
+            // rotation | translation | scale | position | uv | color
             // Vertex 1
-            vPositionData[offset++] = x0 * a + y0 * c + e;
-            vPositionData[offset++] = x0 * b + y0 * d + f;
+            vPositionData[offset++] = r;
+            vPositionData[offset++] = tx;
+            vPositionData[offset++] = ty;
+            vPositionData[offset++] = sx;
+            vPositionData[offset++] = sy;
+            vPositionData[offset++] = x0;
+            vPositionData[offset++] = y0;
             vPositionData[offset++] = u0;
             vPositionData[offset++] = v0;
             vColorData[offset++] = argb;
-            
+
             // Vertex 2
-            vPositionData[offset++] = x1 * a + y1 * c + e;
-            vPositionData[offset++] = x1 * b + y1 * d + f;
+            vPositionData[offset++] = r;
+            vPositionData[offset++] = tx;
+            vPositionData[offset++] = ty;
+            vPositionData[offset++] = sx;
+            vPositionData[offset++] = sy;
+            vPositionData[offset++] = x1;
+            vPositionData[offset++] = y1;
             vPositionData[offset++] = u1;
             vPositionData[offset++] = v1;
             vColorData[offset++] = argb;
-            
+
             // Vertex 3
-            vPositionData[offset++] = x2 * a + y2 * c + e;
-            vPositionData[offset++] = x2 * b + y2 * d + f;
+            vPositionData[offset++] = r;
+            vPositionData[offset++] = tx;
+            vPositionData[offset++] = ty;
+            vPositionData[offset++] = sx;
+            vPositionData[offset++] = sy;
+            vPositionData[offset++] = x2;
+            vPositionData[offset++] = y2;
             vPositionData[offset++] = u0;
             vPositionData[offset++] = v1;
             vColorData[offset++] = argb;
-            
+
             // Vertex 4
-            vPositionData[offset++] = x3 * a + y3 * c + e;
-            vPositionData[offset++] = x3 * b + y3 * d + f;
+            vPositionData[offset++] = r;
+            vPositionData[offset++] = tx;
+            vPositionData[offset++] = ty;
+            vPositionData[offset++] = sx;
+            vPositionData[offset++] = sy;
+            vPositionData[offset++] = x3;
+            vPositionData[offset++] = y3;
             vPositionData[offset++] = u1;
             vPositionData[offset++] = v0;
             vColorData[offset++] = argb;
@@ -270,7 +255,7 @@ function TinyCanvas(canvas) {
             if (++count >= MAX_BATCH) {
                 gl.bufferSubData(34962, 0, vertexData);
                 gl.drawElements(4, count * VERTICES_PER_QUAD, 5123, 0);
-                count = 0;
+                count = 0;               
             }
         },
         'flush': function () {
@@ -282,4 +267,5 @@ function TinyCanvas(canvas) {
     };
     return renderer;
 }
-window['TC'] = TinyCanvas;
+
+window['TS'] = TinySprite;

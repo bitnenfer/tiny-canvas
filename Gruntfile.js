@@ -9,7 +9,10 @@ module.exports = function (grunt) {
             dist: {
                 files: {
                     'build/tiny-canvas.js': [
-                        ['src/header.js', 'src/utils.js', 'src/canvas.js']
+                        ['src/header-tc.js', 'src/utils.js', 'src/canvas.js']
+                    ],
+                    'build/tiny-sprite.js': [
+                        ['src/header-ts.js', 'src/utils.js', 'src/sprite.js']
                     ]
                 }
             }
@@ -19,24 +22,41 @@ module.exports = function (grunt) {
                 'build/**/',
             ],
             afterRelease: [
-                'build/tc.js.report.txt'
+                'build/tc.js.report.txt',
+                'build/ts.js.report.txt'
             ]
         },
         compress: {
-            main: {
+            canvas: {
                 options: {
-                    archive: 'build/<%= pkg.name %>.zip'
+                    archive: 'build/tiny-canvas.zip'
                 },
                 files: [{
                     src: ['build/tc.js']
                 }]
+            },
+            sprite: {
+                options: {
+                    archive: 'build/tiny-sprite.zip'
+                },
+                files: [{
+                    src: ['build/ts.js']
+                }]
             }
         },
         'closure-compiler': {
-            frontend: {
+            canvas: {
                 closurePath: 'node_modules/grunt-closure-compiler',
                 js: 'build/tiny-canvas.js',
                 jsOutputFile: 'build/tc.js',
+                options: {
+                    compilation_level: 'ADVANCED_OPTIMIZATIONS'
+                }
+            },
+            sprite: {
+                closurePath: 'node_modules/grunt-closure-compiler',
+                js: 'build/tiny-sprite.js',
+                jsOutputFile: 'build/ts.js',
                 options: {
                     compilation_level: 'ADVANCED_OPTIMIZATIONS'
                 }

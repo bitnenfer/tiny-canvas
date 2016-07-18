@@ -1,3 +1,4 @@
+// This example is based of PIXI's bunnymark
 var canvas = TC(document.getElementById('canvas')),
     kittenTexture = null,
     fpsMeter = new FPSMeter({

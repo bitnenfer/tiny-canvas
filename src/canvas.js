@@ -4,9 +4,10 @@ function TinyCanvas(canvas) {
         MAX_BATCH = 10922, // floor((2 ^ 16) / 6)
         MAX_STACK = 100,
         MAT_SIZE = 6,
-        MAT_STACK_SIZE = MAX_STACK * 6,
+        VERTICES_PER_QUAD = 6,
+        MAT_STACK_SIZE = MAX_STACK * MAT_SIZE,
         VERTEX_DATA_SIZE = VERTEX_SIZE * MAX_BATCH * 4,
-        INDEX_DATA_SIZE = MAX_BATCH * (2 * 6),
+        INDEX_DATA_SIZE = MAX_BATCH * (2 * VERTICES_PER_QUAD),
         width = canvas.width,
         height = canvas.height,
         shader = CreateShaderProgram(
@@ -62,7 +63,7 @@ function TinyCanvas(canvas) {
     gl.enable(3042);
     gl.useProgram(shader);
     gl.bindBuffer(34963, IBO);
-    for (var indexA = indexB = 0; indexA < MAX_BATCH * 6; indexA += 6, indexB += 4)
+    for (var indexA = indexB = 0; indexA < MAX_BATCH * VERTICES_PER_QUAD; indexA += VERTICES_PER_QUAD, indexB += 4)
         vIndexData[indexA + 0] = indexB,
         vIndexData[indexA + 1] = indexB + 1,
         vIndexData[indexA + 2] = indexB + 2,
@@ -141,7 +142,6 @@ function TinyCanvas(canvas) {
             mat[5] = stack[stackp + 5];
         },
         'img': function (texture, x, y, w, h, u0, v0, u1, v1) {
-
             var x0 = x,
                 y0 = y,
                 x1 = x + w,
@@ -160,9 +160,9 @@ function TinyCanvas(canvas) {
                 argb = renderer['col'];
 
             if (texture != currentTexture ||
-                count > MAX_BATCH) {
+                count + 1 >= MAX_BATCH) {
                 gl.bufferSubData(34962, 0, vertexData);
-                gl.drawElements(4, count * 6, 5123, 0);
+                gl.drawElements(4, count * VERTICES_PER_QUAD, 5123, 0);
                 count = 0;
                 if (currentTexture != texture) {
                     currentTexture = texture;
@@ -171,32 +171,46 @@ function TinyCanvas(canvas) {
             }
 
             offset = count * VERTEX_SIZE;
-            vPositionData[offset + 0] = x0 * a + y0 * c + e;
-            vPositionData[offset + 1] = x0 * b + y0 * d + f;
-            vPositionData[offset + 2] = u0;
-            vPositionData[offset + 3] = v0;
-            vColorData[offset + 4] = argb;
-            vPositionData[offset + 5] = x1 * a + y1 * c + e;
-            vPositionData[offset + 6] = x1 * b + y1 * d + f;
-            vPositionData[offset + 7] = u1;
-            vPositionData[offset + 8] = v1;
-            vColorData[offset + 9] = argb;
-            vPositionData[offset + 10] = x2 * a + y2 * c + e;
-            vPositionData[offset + 11] = x2 * b + y2 * d + f;
-            vPositionData[offset + 12] = u0;
-            vPositionData[offset + 13] = v1;
-            vColorData[offset + 14] = argb;
-            vPositionData[offset + 15] = x3 * a + y3 * c + e;
-            vPositionData[offset + 16] = x3 * b + y3 * d + f;
-            vPositionData[offset + 17] = u1;
-            vPositionData[offset + 18] = v0;
-            vColorData[offset + 19] = argb;
-            ++count;
+            // Vertex Order
+            // Vertex Position | UV | ARGB
+            // Vertex 1
+            vPositionData[offset++] = x0 * a + y0 * c + e;
+            vPositionData[offset++] = x0 * b + y0 * d + f;
+            vPositionData[offset++] = u0;
+            vPositionData[offset++] = v0;
+            vColorData[offset++] = argb;
+            
+            // Vertex 2
+            vPositionData[offset++] = x1 * a + y1 * c + e;
+            vPositionData[offset++] = x1 * b + y1 * d + f;
+            vPositionData[offset++] = u1;
+            vPositionData[offset++] = v1;
+            vColorData[offset++] = argb;
+            
+            // Vertex 3
+            vPositionData[offset++] = x2 * a + y2 * c + e;
+            vPositionData[offset++] = x2 * b + y2 * d + f;
+            vPositionData[offset++] = u0;
+            vPositionData[offset++] = v1;
+            vColorData[offset++] = argb;
+            
+            // Vertex 4
+            vPositionData[offset++] = x3 * a + y3 * c + e;
+            vPositionData[offset++] = x3 * b + y3 * d + f;
+            vPositionData[offset++] = u1;
+            vPositionData[offset++] = v0;
+            vColorData[offset++] = argb;
+
+            if (++count >= MAX_BATCH) {
+                gl.bufferSubData(34962, 0, vertexData);
+                gl.drawElements(4, count * VERTICES_PER_QUAD, 5123, 0);
+                count = 0;
+            }
         },
         'flush': function () {
             if (count == 0) return;
             gl.bufferSubData(34962, 0, vPositionData.subarray(0, count * VERTEX_SIZE));
-            gl.drawElements(4, count * 6, 5123, 0);
+            gl.drawElements(4, count * VERTICES_PER_QUAD, 5123, 0);
             count = 0;
         }
     };
