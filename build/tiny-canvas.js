@@ -120,10 +120,9 @@ function TinyCanvas(canvas) {
         shader = CreateShaderProgram(
             gl, [
                 'precision lowp float;',
-                // IN Vertex Position
-                'attribute vec2 a;',
+                // IN Vertex Position and
                 // IN Texture Coordinates
-                'attribute vec2 b;',
+                'attribute vec2 a, b;',
                 // IN Vertex Color
                 'attribute vec4 c;',
                 // OUT Texture Coordinates
