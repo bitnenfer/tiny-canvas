@@ -9,7 +9,7 @@ module.exports = function (grunt) {
             dist: {
                 files: {
                     'build/tiny-canvas.js': [
-                        ['src/canvas.js']
+                        ['src/header.js', 'src/utils.js', 'src/canvas.js']
                     ]
                 }
             }
