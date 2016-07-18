@@ -1,5 +1,5 @@
 var canvas = TcCnv(document.getElementById('canvas')),
-    bunnyTexture = null,
+    kittenTexture = null,
     fpsMeter = new FPSMeter({
         graph: 1,
         heat: 1,
@@ -7,29 +7,26 @@ var canvas = TcCnv(document.getElementById('canvas')),
         interval: 50
     }),
     gl = canvas.g,
-    bunnyImage = new Image(),
+    kittenImage = new Image(),
     gravity = 0.5,
     random = Math.random,
     maxX = canvas.c.width,
     minX = 0,
     maxY = canvas.c.height,
     minY = 0,
-    addBunny = false,
+    add = false,
     startBunnyCount = 2,
     count = 0,
     amount = 100,
-    currentFrame = (random() * 5) | 0,
-    bunnys = [],
-    counter = document.getElementById('bunny-count'),
+    kittens = [],
+    counter = document.getElementById('kitten-count'),
     frames = [
-        [2, 47, 26, 37],
-        [2, 86, 26, 37],
-        [2, 125, 26, 37],
-        [2, 164, 26, 37],
-        [2, 2, 26, 43]
-    ];
-
-canvas.bkg(0.68, 0.68, 0.65);
+        [0, 0, 32, 32],
+        [0, 32, 32, 32],
+        [0, 64, 32, 32],
+        [0, 96, 32, 32]
+    ],
+    currentFrame = 0;
 
 function Sprite(x, y, texture, frameX, frameY, frameW, frameH) {
     this.positionX = x;
@@ -50,52 +47,54 @@ function Sprite(x, y, texture, frameX, frameY, frameW, frameH) {
 function create() {
     var frame = frames[currentFrame];
     for (var i = 0; i < startBunnyCount; i++) {
-        var bunny = new Sprite(0, 0, bunnyTexture, frame[0], frame[1], frame[2], frame[3]);
-        bunny.speedX = Math.random() * 10;
-        bunny.speedY = (Math.random() * 10) - 5;
-        bunnys[count++] = bunny;
+        var kitten = new Sprite(0, 0, kittenTexture, frame[0], frame[1], frame[2], frame[3]);
+        kitten.speedX = Math.random() * 10;
+        kitten.speedY = (Math.random() * 10) - 5;
+        kittens[count++] = kitten;
     }
-    counter.innerHTML = count + " BUNNIES";
+    counter.innerHTML = count + " KITTENS";
+
+    canvas.bkg(0.227, 0.227, 0.227);
     mainLoop();
 }
 
 function update() {
-    if (addBunny) {
+    if (add) {
         if (count < 200000) {
             var frame = frames[currentFrame];
             for (var i = 0; i < amount; i++) {
-                var bunny = new Sprite(0, 0, bunnyTexture, frame[0], frame[1], frame[2], frame[3]);
-                bunny.speedX = Math.random() * 10;
-                bunny.speedY = (Math.random() * 10) - 5;
-                bunny.rotation = (Math.random() - 0.5);
-                bunnys[count++] = bunny;
+                var kitten = new Sprite(0, 0, kittenTexture, frame[0], frame[1], frame[2], frame[3]);
+                kitten.speedX = Math.random() * 10;
+                kitten.speedY = (Math.random() * 10) - 5;
+                kitten.rotation = (Math.random() - 0.5);
+                kittens[count++] = kitten;
             }
-            counter.innerHTML = count + " BUNNIES";
+            counter.innerHTML = count + " KITTENS";
         }
     }
     for (var i = 0; i < count; i++) {
-        var bunny = bunnys[i];
-        bunny.positionX += bunny.speedX;
-        bunny.positionY += bunny.speedY;
-        bunny.speedY += gravity;
+        var kitten = kittens[i];
+        kitten.positionX += kitten.speedX;
+        kitten.positionY += kitten.speedY;
+        kitten.speedY += gravity;
 
-        if (bunny.positionX > maxX) {
-            bunny.speedX *= -1;
-            bunny.positionX = maxX;
-        } else if (bunny.positionX < minX) {
-            bunny.speedX *= -1;
-            bunny.positionX = minX;
+        if (kitten.positionX > maxX) {
+            kitten.speedX *= -1;
+            kitten.positionX = maxX;
+        } else if (kitten.positionX < minX) {
+            kitten.speedX *= -1;
+            kitten.positionX = minX;
         }
-        if (bunny.positionY > maxY) {
-            bunny.speedY *= -0.85;
-            bunny.positionY = maxY;
-            bunny.spin = (random() - 0.5) * 0.2
+        if (kitten.positionY > maxY) {
+            kitten.speedY *= -0.85;
+            kitten.positionY = maxY;
+            kitten.spin = (random() - 0.5) * 0.2
             if (random() > 0.5) {
-                bunny.speedY -= random() * 6;
+                kitten.speedY -= random() * 6;
             }
-        } else if (bunny.positionY < minY) {
-            bunny.speedY = 0;
-            bunny.positionY = minY;
+        } else if (kitten.positionY < minY) {
+            kitten.speedY = 0;
+            kitten.positionY = minY;
         }
     }
 }
@@ -103,19 +102,19 @@ function update() {
 function draw() {
     canvas.cls();
     for (var i = 0; i < count; i++) {
-        var bunny = bunnys[i];
+        var kitten = kittens[i];
         canvas.push();
-        canvas.trans(bunny.positionX, bunny.positionY);
-        canvas.rot(bunny.rotation);
+        canvas.trans(kitten.positionX, kitten.positionY);
+        canvas.rot(kitten.rotation);
         canvas.img(
-            bunny.texture, -bunny.halfWidth,
+            kitten.texture, -kitten.halfWidth,
             0,
-            bunny.width,
-            bunny.height,
-            bunny.u0,
-            bunny.v0,
-            bunny.u1,
-            bunny.v1
+            kitten.width,
+            kitten.height,
+            kitten.u0,
+            kitten.v0,
+            kitten.u1,
+            kitten.v1
         );
         canvas.pop();
     }
@@ -130,21 +129,21 @@ function mainLoop() {
 }
 
 canvas.c.onmousedown = function (evt) {
-    addBunny = true;
-    currentFrame = (random() * 4) | 0;
+    add = true;
+    currentFrame = (currentFrame + 1) % frames.length;    
 };
 canvas.c.onmouseup = function (evt) {
-    addBunny = false;
+    add = false;
 };
 canvas.c.ontouchstart = function (evt) {
-    addBunny = true;
-    currentFrame = (currentFrame + 1) % 5;
+    add = true;
+    currentFrame = (currentFrame + 1) % frames.length;
 };
 canvas.c.ontouchend = function (evt) {
-    addBunny = false;
+    add = false;
 };
-bunnyImage.onload = function () {
-    bunnyTexture = TcTex(gl, bunnyImage, bunnyImage.width, bunnyImage.height);
+kittenImage.onload = function () {
+    kittenTexture = TcTex(gl, kittenImage, kittenImage.width, kittenImage.height);
     create();
 };
-bunnyImage.src = 'bunnys.png';
+kittenImage.src = 'kittens.png';
