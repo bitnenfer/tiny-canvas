@@ -4,6 +4,7 @@ function CompileShader(gl, source, type) {
     gl.compileShader(shader);
     return shader;
 }
+
 function CreateShaderProgram(gl, vsSource, fsSource) {
     var program = gl.createProgram(),
         vShader = CompileShader(gl, vsSource, 35633),
@@ -34,13 +35,14 @@ function CreateTexture(gl, image, width, height) {
     texture.height = height;
     return texture;
 }
+
 function GetTinyCanvas(canvas) {
     var gl = canvas.getContext('webgl'),
-        MAX_BATCH = 10000,
+        VERTEX_SIZE = (4 * 2) + (4 * 2) + (4),
+        MAX_BATCH = 10922, // floor((2 ^ 16) / 6)
         MAX_STACK = 100,
         MAT_SIZE = 6,
         MAT_STACK_SIZE = MAX_STACK * 6,
-        VERTEX_SIZE = (4 * 2) + (4 * 2) + (4),
         VERTEX_DATA_SIZE = VERTEX_SIZE * MAX_BATCH * 4,
         INDEX_DATA_SIZE = MAX_BATCH * (2 * 6),
         width = canvas.width,
@@ -86,7 +88,6 @@ function GetTinyCanvas(canvas) {
         IBO = CreateBuffer(gl, 34963, vIndexData.byteLength, 35044),
         VBO = CreateBuffer(gl, 34962, vertexData.byteLength, 35048),
         count = 0,
-        argb = 0xFFFFFFFF,
         mat = new Float32Array([1, 0, 0, 1, 0, 0]),
         stack = new Float32Array(100),
         stackp = 0,
@@ -113,7 +114,6 @@ function GetTinyCanvas(canvas) {
     locA = gl.getAttribLocation(shader, 'a');
     locB = gl.getAttribLocation(shader, 'b');
     locC = gl.getAttribLocation(shader, 'c');
-
     gl.enableVertexAttribArray(locA);
     gl.vertexAttribPointer(locA, 2, 5126, 0, VERTEX_SIZE, 0);
     gl.enableVertexAttribArray(locB);
@@ -131,8 +131,11 @@ function GetTinyCanvas(canvas) {
     renderer = {
         'g': gl,
         'c': canvas,
-        'cls': function (r, g, b) {
+        'col': 0xFFFFFFFF,
+        'bkg': function (r, g, b) {
             gl.clearColor(r, g, b, 1);
+        },
+        'cls': function () {
             gl.clear(16384);
         },
         'trans': function (x, y) {
@@ -176,22 +179,8 @@ function GetTinyCanvas(canvas) {
             mat[4] = stack[stackp + 4];
             mat[5] = stack[stackp + 5];
         },
-        'col': function (color) {
-            argb = color;
-        },
-        'img': function (texture, x, y) {
-            renderer.drawImageUV(texture, x, y, 0, 0, 1, 1);
-        },
-        'imgRect': function (texture, x, y, rx, ry, rw, rh) {
-            var width = texture.width,
-                height = texture.height,
-                ncw = rw / width,
-                nch = rh / height,
-                ncx = rx / width,
-                ncy = ry / height;
-            renderer.drawImageUV(texture, x, y, width, height, ncx, ncy, ncx + ncw, ncy + nch);
-        },
-        'imgUV': function (texture, x, y, w, h, u0, v0, u1, v1) {
+        'img': function (texture, x, y, w, h, u0, v0, u1, v1) {
+
             var x0 = x,
                 y0 = y,
                 x1 = x + w,
@@ -206,16 +195,21 @@ function GetTinyCanvas(canvas) {
                 d = mat[3],
                 e = mat[4],
                 f = mat[5],
-                offset = count * VERTEX_SIZE;
+                offset = 0,
+                argb = renderer['col'];
 
             if (texture != currentTexture ||
-                count > MAX_BATCH)
-                gl.bufferSubData(34962, 0, vertexData),
-                gl.drawElements(4, count * 6, 5123, 0),
-                count = 0,
-                currentTexture != texture ?
-                (currentTexture = texture, gl.bindTexture(gl.TEXTURE_2D, currentTexture)) : 0;
+                count > MAX_BATCH) {
+                gl.bufferSubData(34962, 0, vertexData);
+                gl.drawElements(4, count * 6, 5123, 0);
+                count = 0;
+                if (currentTexture != texture) {
+                    currentTexture = texture;
+                    gl.bindTexture(3553, currentTexture);
+                }
+            }
 
+            offset = count * VERTEX_SIZE;
             vPositionData[offset + 0] = x0 * a + y0 * c + e;
             vPositionData[offset + 1] = x0 * b + y0 * d + f;
             vPositionData[offset + 2] = u0;
@@ -236,13 +230,11 @@ function GetTinyCanvas(canvas) {
             vPositionData[offset + 17] = u1;
             vPositionData[offset + 18] = v0;
             vColorData[offset + 19] = argb;
-
             ++count;
         },
-        flush: function () {
+        'flush': function () {
             if (count == 0) return;
-            var extract = vPositionData.subarray(0, count * 20);
-            gl.bufferSubData(34962, 0, extract);
+            gl.bufferSubData(34962, 0, vPositionData.subarray(0, count * VERTEX_SIZE));
             gl.drawElements(4, count * 6, 5123, 0);
             count = 0;
         }
