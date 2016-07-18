@@ -1,3 +1,5 @@
+![TinyCanvas](http://voidptr.io/dev/extra/shin.png "Shin Logo")
+
 Tiny-Canvas
 ====
 
