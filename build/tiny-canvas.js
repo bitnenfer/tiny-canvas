@@ -109,6 +109,11 @@ function TinyCanvas(canvas) {
                 '}'
             ].join('\n')
         ),
+        glBufferSubData = gl.bufferSubData.bind(gl),
+        glDrawElements = gl.drawElements.bind(gl),
+        glBindTexture = gl.bindTexture.bind(gl),
+        glClear = gl.clear.bind(gl),
+        glClearColor = gl.clearColor.bind(gl),
         vertexData = new ArrayBuffer(VERTEX_DATA_SIZE),
         vPositionData = new Float32Array(vertexData),
         vColorData = new Uint32Array(vertexData),
@@ -137,7 +142,7 @@ function TinyCanvas(canvas) {
         vIndexData[indexA + 4] = indexB + 3,
         vIndexData[indexA + 5] = indexB + 1;
 
-    gl.bufferSubData(34963, 0, vIndexData);
+    glBufferSubData(34963, 0, vIndexData);
     gl.bindBuffer(34962, VBO);
     locA = gl.getAttribLocation(shader, 'a');
     locB = gl.getAttribLocation(shader, 'b');
@@ -161,10 +166,10 @@ function TinyCanvas(canvas) {
         'c': canvas,
         'col': 0xFFFFFFFF,
         'bkg': function (r, g, b) {
-            gl.clearColor(r, g, b, 1);
+            glClearColor(r, g, b, 1);
         },
         'cls': function () {
-            gl.clear(16384);
+            glClear(16384);
         },
         'trans': function (x, y) {
             mat[4] = mat[0] * x + mat[2] * y + mat[4];
@@ -227,12 +232,12 @@ function TinyCanvas(canvas) {
 
             if (texture != currentTexture ||
                 count + 1 >= MAX_BATCH) {
-                gl.bufferSubData(34962, 0, vertexData);
-                gl.drawElements(4, count * VERTICES_PER_QUAD, 5123, 0);
+                glBufferSubData(34962, 0, vertexData);
+                glDrawElements(4, count * VERTICES_PER_QUAD, 5123, 0);
                 count = 0;
                 if (currentTexture != texture) {
                     currentTexture = texture;
-                    gl.bindTexture(3553, currentTexture);
+                    glBindTexture(3553, currentTexture);
                 }
             }
 
@@ -268,15 +273,15 @@ function TinyCanvas(canvas) {
             vColorData[offset++] = argb;
 
             if (++count >= MAX_BATCH) {
-                gl.bufferSubData(34962, 0, vertexData);
-                gl.drawElements(4, count * VERTICES_PER_QUAD, 5123, 0);
+                glBufferSubData(34962, 0, vertexData);
+                glDrawElements(4, count * VERTICES_PER_QUAD, 5123, 0);
                 count = 0;
             }
         },
         'flush': function () {
             if (count == 0) return;
-            gl.bufferSubData(34962, 0, vPositionData.subarray(0, count * VERTEX_SIZE));
-            gl.drawElements(4, count * VERTICES_PER_QUAD, 5123, 0);
+            glBufferSubData(34962, 0, vPositionData.subarray(0, count * VERTEX_SIZE));
+            glDrawElements(4, count * VERTICES_PER_QUAD, 5123, 0);
             count = 0;
         }
     };

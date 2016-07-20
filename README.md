@@ -10,19 +10,19 @@ The main difference between TinyCanvas and TinySprite is that the first one impl
 Modules size
 -----
 
-TinyCanvas zipped size is: 1560 bytes
+TinyCanvas zipped size is: 1571 bytes
 
-TinyCanvas compiled size is: 3203 bytes
+TinyCanvas compiled size is: 3195 bytes
 
-TinyCanvas full size is: 10103 bytes
+TinyCanvas full size is: 10335 bytes
 
 ---
 
-TinySprite zipped size is: 1400 bytes
+TinySprite zipped size is: 1416 bytes
 
-TinySprite compiled size is: 3155 bytes
+TinySprite compiled size is: 3137 bytes
 
-TinySprite full size is: 9609 bytes
+TinySprite full size is: 9844 bytes
 
 Examples
 -----

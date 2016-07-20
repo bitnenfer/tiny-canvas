@@ -34,6 +34,11 @@ function TinySprite(canvas) {
                 '}'
             ].join('\n')
         ),
+        glBufferSubData = gl.bufferSubData.bind(gl),
+        glDrawElements = gl.drawElements.bind(gl),
+        glBindTexture = gl.bindTexture.bind(gl),
+        glClear = gl.clear.bind(gl),
+        glClearColor = gl.clearColor.bind(gl),
         vertexData = new ArrayBuffer(VERTEX_DATA_SIZE),
         vPositionData = new Float32Array(vertexData),
         vColorData = new Uint32Array(vertexData),
@@ -127,12 +132,12 @@ function TinySprite(canvas) {
 
             if (texture != currentTexture ||
                 count + 1 >= MAX_BATCH) {
-                gl.bufferSubData(34962, 0, vertexData);
-                gl.drawElements(4, count * VERTICES_PER_QUAD, 5123, 0);
+                glBufferSubData(34962, 0, vertexData);
+                glDrawElements(4, count * VERTICES_PER_QUAD, 5123, 0);
                 count = 0;
                 if (texture != currentTexture) {
                     currentTexture = texture;
-                    gl.bindTexture(3553, currentTexture);
+                    glBindTexture(3553, currentTexture);
                 }
             }
 
@@ -188,15 +193,15 @@ function TinySprite(canvas) {
             vColorData[offset++] = argb;
 
             if (++count >= MAX_BATCH) {
-                gl.bufferSubData(34962, 0, vertexData);
-                gl.drawElements(4, count * VERTICES_PER_QUAD, 5123, 0);
+                glBufferSubData(34962, 0, vertexData);
+                glDrawElements(4, count * VERTICES_PER_QUAD, 5123, 0);
                 count = 0;               
             }
         },
         'flush': function () {
             if (count == 0) return;
-            gl.bufferSubData(34962, 0, vPositionData.subarray(0, count * VERTEX_SIZE));
-            gl.drawElements(4, count * VERTICES_PER_QUAD, 5123, 0);
+            glBufferSubData(34962, 0, vPositionData.subarray(0, count * VERTEX_SIZE));
+            glDrawElements(4, count * VERTICES_PER_QUAD, 5123, 0);
             count = 0;
         }
     };
